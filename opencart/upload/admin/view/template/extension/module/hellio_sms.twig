@@ -1,0 +1,521 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="form-hellio" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div id="alert-hellio"></div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+      </div>
+      <div class="panel-body">
+        <form id="form-hellio" action="{{ action }}" method="post" enctype="multipart/form-data" class="form-horizontal">
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
+            <li><a href="#tab-order-status" data-toggle="tab">{{ tab_order_status }}</a></li>
+            <li><a href="#tab-admin-alert" data-toggle="tab">{{ tab_admin_alert }}</a></li>
+            <li><a href="#tab-otp" data-toggle="tab">{{ tab_otp }}</a></li>
+            <li><a href="#tab-bulk" data-toggle="tab">{{ tab_bulk }}</a></li>
+            <li><a href="#tab-test-send" data-toggle="tab">{{ tab_test_send }}</a></li>
+          </ul>
+
+          <div class="tab-content">
+            {# ---------- General ---------- #}
+            <div class="tab-pane active" id="tab-general">
+              <p class="text-muted">{{ text_general_intro }}</p>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+                <div class="col-sm-10">
+                  <select name="module_hellio_sms_status" id="input-status" class="form-control">
+                    <option value="1"{% if module_hellio_sms_status %} selected="selected"{% endif %}>{{ text_enabled }}</option>
+                    <option value="0"{% if not module_hellio_sms_status %} selected="selected"{% endif %}>{{ text_disabled }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-base-url">{{ entry_api_base_url }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="module_hellio_sms_api_base_url" value="{{ module_hellio_sms_api_base_url }}" id="input-base-url" class="form-control"/>
+                  <span class="help-block">{{ help_api_base_url }}</span>
+                </div>
+              </div>
+
+              {# ---- Connect with your Hellio login ---- #}
+              <div class="form-group">
+                <label class="col-sm-2 control-label">{{ text_connect }}</label>
+                <div class="col-sm-10">
+                  <div class="well well-sm" style="margin-bottom:0;">
+                    <p class="text-muted" style="margin-top:0;">{{ text_connect_intro }}</p>
+
+                    <div id="hellio-connected" {% if not connected_email %}style="display:none;"{% endif %}>
+                      <p><i class="fa fa-check-circle text-success"></i> <strong id="hellio-connected-label">{% if connected_email %}{{ text_connected_as|replace({'%s': connected_email}) }}{% endif %}</strong></p>
+                      <button type="button" id="button-disconnect" class="btn btn-default btn-sm"><i class="fa fa-sign-out"></i> {{ text_disconnect }}</button>
+                    </div>
+
+                    <div id="hellio-connect-form" {% if connected_email %}style="display:none;"{% endif %}>
+                      <div id="connect-alert"></div>
+                      <div class="row">
+                        <div class="col-sm-4">
+                          <input type="email" id="hellio-email" class="form-control" placeholder="{{ entry_email }}" autocomplete="off"/>
+                        </div>
+                        <div class="col-sm-4">
+                          <input type="password" id="hellio-password" class="form-control" placeholder="{{ entry_password }}" autocomplete="new-password"/>
+                        </div>
+                        <div class="col-sm-4">
+                          <button type="button" id="button-connect" class="btn btn-primary btn-block"><i class="fa fa-plug"></i> {{ text_connect }}</button>
+                        </div>
+                      </div>
+                      <div class="row" id="hellio-2fa-row" style="display:none; margin-top:10px;">
+                        <div class="col-sm-4">
+                          <input type="text" id="hellio-2fa" class="form-control" inputmode="numeric" placeholder="{{ entry_two_factor }}" autocomplete="one-time-code"/>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-token">{{ entry_api_token }}</label>
+                <div class="col-sm-10">
+                  <p class="text-muted" style="margin-bottom:5px;">{{ text_or_paste_token }}</p>
+                  <input type="password" name="module_hellio_sms_api_token" value="" placeholder="{% if api_token_set %}********{% endif %}" autocomplete="new-password" id="input-token" class="form-control"/>
+                  <span class="help-block">{{ help_api_token }}</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-sender">{{ entry_sender_id }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="module_hellio_sms_sender_id" value="{{ module_hellio_sms_sender_id }}" maxlength="11" id="input-sender" class="form-control"/>
+                  <span class="help-block">{{ help_sender_id }}</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-dial">{{ entry_default_dial_code }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="module_hellio_sms_default_dial_code" value="{{ module_hellio_sms_default_dial_code }}" id="input-dial" class="form-control"/>
+                  <span class="help-block">{{ help_default_dial_code }}</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="button" id="button-test" class="btn btn-default"><i class="fa fa-plug"></i> {{ text_test_connection }}</button>
+                  <span id="test-result" style="margin-left:10px;"></span>
+                </div>
+              </div>
+            </div>
+
+            {# ---------- Order status SMS ---------- #}
+            <div class="tab-pane" id="tab-order-status">
+              <p class="text-muted">{{ text_order_status_intro }}</p>
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ text_placeholder_help }}</div>
+
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <td class="text-left" style="width:15%;">{{ entry_status_enabled }}</td>
+                    <td class="text-left">{{ entry_status_template }}</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for order_status in order_statuses %}
+                  {% set sid = order_status.order_status_id %}
+                  {% set row = module_hellio_sms_order_status[sid] is defined ? module_hellio_sms_order_status[sid] : {'enabled': 0, 'template': ''} %}
+                  <tr>
+                    <td class="text-left">
+                      <div class="checkbox">
+                        <label>
+                          <input type="checkbox" name="module_hellio_sms_order_status[{{ sid }}][enabled]" value="1"{% if row.enabled %} checked="checked"{% endif %}/>
+                          {{ order_status.name }}
+                        </label>
+                      </div>
+                    </td>
+                    <td class="text-left">
+                      <textarea name="module_hellio_sms_order_status[{{ sid }}][template]" rows="2" class="form-control" placeholder="{{ default_status_template }}">{{ row.template }}</textarea>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            {# ---------- Admin alerts ---------- #}
+            <div class="tab-pane" id="tab-admin-alert">
+              <p class="text-muted">{{ text_admin_alert_intro }}</p>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-alert-enabled">{{ entry_admin_alert_enabled }}</label>
+                <div class="col-sm-10">
+                  <select name="module_hellio_sms_admin_alert_enabled" id="input-alert-enabled" class="form-control">
+                    <option value="1"{% if module_hellio_sms_admin_alert_enabled %} selected="selected"{% endif %}>{{ text_enabled }}</option>
+                    <option value="0"{% if not module_hellio_sms_admin_alert_enabled %} selected="selected"{% endif %}>{{ text_disabled }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-alert-numbers">{{ entry_admin_alert_numbers }}</label>
+                <div class="col-sm-10">
+                  <input type="text" name="module_hellio_sms_admin_alert_numbers" value="{{ module_hellio_sms_admin_alert_numbers }}" id="input-alert-numbers" class="form-control"/>
+                  <span class="help-block">{{ help_admin_alert_numbers }}</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-alert-template">{{ entry_admin_alert_template }}</label>
+                <div class="col-sm-10">
+                  <textarea name="module_hellio_sms_admin_alert_template" rows="3" id="input-alert-template" class="form-control">{{ module_hellio_sms_admin_alert_template }}</textarea>
+                  <span class="help-block">{{ text_placeholder_help }}</span>
+                </div>
+              </div>
+            </div>
+
+            {# ---------- OTP ---------- #}
+            <div class="tab-pane" id="tab-otp">
+              <p class="text-muted">{{ text_otp_intro }}</p>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-otp-enabled">{{ entry_otp_enabled }}</label>
+                <div class="col-sm-10">
+                  <select name="module_hellio_sms_otp_enabled" id="input-otp-enabled" class="form-control">
+                    <option value="1"{% if module_hellio_sms_otp_enabled %} selected="selected"{% endif %}>{{ text_enabled }}</option>
+                    <option value="0"{% if not module_hellio_sms_otp_enabled %} selected="selected"{% endif %}>{{ text_disabled }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-otp-length">{{ entry_otp_length }}</label>
+                <div class="col-sm-10">
+                  <input type="number" name="module_hellio_sms_otp_length" value="{{ module_hellio_sms_otp_length }}" min="4" max="10" id="input-otp-length" class="form-control"/>
+                  <span class="help-block">{{ help_otp_length }}</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-otp-expiry">{{ entry_otp_expiry }}</label>
+                <div class="col-sm-10">
+                  <input type="number" name="module_hellio_sms_otp_expiry" value="{{ module_hellio_sms_otp_expiry }}" min="1" max="1440" id="input-otp-expiry" class="form-control"/>
+                  <span class="help-block">{{ help_otp_expiry }}</span>
+                </div>
+              </div>
+            </div>
+
+            {# ---------- Bulk SMS ---------- #}
+            <div class="tab-pane" id="tab-bulk">
+              <p class="text-muted">{{ text_bulk_intro }}</p>
+              <div id="bulk-alert"></div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-bulk-message">{{ entry_bulk_message }}</label>
+                <div class="col-sm-10">
+                  <textarea id="input-bulk-message" rows="4" maxlength="1600" class="form-control"></textarea>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-bulk-audience">{{ entry_bulk_audience }}</label>
+                <div class="col-sm-10">
+                  <select id="input-bulk-audience" class="form-control">
+                    <option value="all">{{ text_audience_all }}</option>
+                    <option value="status">{{ text_audience_status }}</option>
+                    <option value="list">{{ text_audience_list }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" id="bulk-status-group" style="display:none;">
+                <label class="col-sm-2 control-label" for="input-bulk-status">{{ entry_bulk_status }}</label>
+                <div class="col-sm-10">
+                  <select id="input-bulk-status" class="form-control">
+                    {% for order_status in order_statuses %}
+                    <option value="{{ order_status.order_status_id }}">{{ order_status.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" id="bulk-list-group" style="display:none;">
+                <label class="col-sm-2 control-label" for="input-bulk-list">{{ entry_bulk_list }}</label>
+                <div class="col-sm-10">
+                  <textarea id="input-bulk-list" rows="4" class="form-control"></textarea>
+                  <span class="help-block">{{ help_bulk_list }}</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="button" id="button-bulk" class="btn btn-primary"><i class="fa fa-paper-plane"></i> {{ text_send_bulk }}</button>
+                </div>
+              </div>
+            </div>
+
+            {# ---------- Send test SMS ---------- #}
+            <div class="tab-pane" id="tab-test-send">
+              <p class="text-muted">{{ text_test_send_intro }}</p>
+              <div class="alert alert-info"><i class="fa fa-info-circle"></i> {{ text_placeholder_help }}</div>
+              <div id="test-send-alert"></div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-test-recipient">{{ entry_test_recipient }}</label>
+                <div class="col-sm-10">
+                  <textarea id="input-test-recipient" rows="3" class="form-control" placeholder="{{ entry_test_recipient }}"></textarea>
+                  <span class="help-block">{{ help_test_recipient }}</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-test-sender">{{ entry_test_sender }}</label>
+                <div class="col-sm-10">
+                  <input type="text" id="input-test-sender" class="form-control" maxlength="11" value="{{ module_hellio_sms_sender_id }}"/>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-test-message">{{ entry_test_message }}</label>
+                <div class="col-sm-10">
+                  <textarea id="input-test-message" rows="4" maxlength="1600" class="form-control">{{ default_status_template }}</textarea>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="button" id="button-test-send" class="btn btn-primary"><i class="fa fa-paper-plane"></i> {{ text_test_send }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+(function ($) {
+  var userToken = '{{ user_token }}';
+
+  function showAlert(target, type, message) {
+    $(target).html('<div class="alert alert-' + type + '"><i class="fa fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i> ' + message + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+  }
+
+  // Save (AJAX).
+  $('#form-hellio').on('submit', function (e) {
+    e.preventDefault();
+
+    var $btn = $('button[form="form-hellio"]');
+    $btn.button('loading');
+
+    $.ajax({
+      url: '{{ action }}',
+      type: 'post',
+      data: $('#form-hellio').serialize(),
+      dataType: 'json',
+      success: function (json) {
+        $('.text-danger').remove();
+
+        if (json.error) {
+          showAlert('#alert-hellio', 'danger', json.error);
+        }
+
+        if (json.success) {
+          showAlert('#alert-hellio', 'success', json.success);
+        }
+
+        window.scrollTo(0, 0);
+      },
+      error: function (xhr) {
+        showAlert('#alert-hellio', 'danger', xhr.statusText);
+      },
+      complete: function () {
+        $btn.button('reset');
+      }
+    });
+  });
+
+  // Test connection.
+  $('#button-test').on('click', function () {
+    var $btn = $(this);
+    $btn.button('loading');
+    $('#test-result').html('{{ text_testing }}');
+
+    $.ajax({
+      url: '{{ test_action }}',
+      type: 'post',
+      data: $('#input-token, #input-base-url').serialize(),
+      dataType: 'json',
+      success: function (json) {
+        if (json.error) {
+          $('#test-result').html('<span class="text-danger">' + json.error + '</span>');
+        } else {
+          var extra = json.balance ? ' (' + JSON.stringify(json.balance) + ')' : '';
+          $('#test-result').html('<span class="text-success">' + json.success + extra + '</span>');
+        }
+      },
+      error: function (xhr) {
+        $('#test-result').html('<span class="text-danger">' + xhr.statusText + '</span>');
+      },
+      complete: function () {
+        $btn.button('reset');
+      }
+    });
+  });
+
+  // Connect with a Hellio login. Credentials go to the server only.
+  $('#button-connect').on('click', function () {
+    var $btn = $(this);
+    $btn.button('loading');
+    showAlert('#connect-alert', 'info', '{{ text_connecting }}');
+
+    $.ajax({
+      url: '{{ connect_action }}',
+      type: 'post',
+      data: {
+        email: $('#hellio-email').val(),
+        password: $('#hellio-password').val(),
+        two_factor_code: $('#hellio-2fa').val(),
+        module_hellio_sms_api_base_url: $('#input-base-url').val()
+      },
+      dataType: 'json',
+      success: function (json) {
+        if (json.two_factor_required) {
+          $('#hellio-2fa-row').show();
+          showAlert('#connect-alert', 'warning', json.error);
+          return;
+        }
+
+        if (json.error) {
+          showAlert('#connect-alert', 'danger', json.error);
+          return;
+        }
+
+        var label = '{{ text_connected_as }}'.replace('%s', json.connected);
+        $('#hellio-connected-label').text(label);
+        $('#hellio-connect-form').hide();
+        $('#hellio-connected').show();
+        $('#hellio-password').val('');
+      },
+      error: function (xhr) {
+        showAlert('#connect-alert', 'danger', xhr.statusText);
+      },
+      complete: function () {
+        $btn.button('reset');
+      }
+    });
+  });
+
+  // Disconnect: clear the stored token server side.
+  $('#button-disconnect').on('click', function () {
+    var $btn = $(this);
+    $btn.button('loading');
+
+    $.ajax({
+      url: '{{ disconnect_action }}',
+      type: 'post',
+      dataType: 'json',
+      success: function () {
+        $('#hellio-connected').hide();
+        $('#hellio-connect-form').show();
+        $('#hellio-2fa-row').hide();
+      },
+      complete: function () {
+        $btn.button('reset');
+      }
+    });
+  });
+
+  // Send a single test SMS.
+  $('#button-test-send').on('click', function () {
+    var $btn = $(this);
+    $btn.button('loading');
+    showAlert('#test-send-alert', 'info', '{{ text_sending }}');
+
+    $.ajax({
+      url: '{{ test_send_action }}',
+      type: 'post',
+      data: {
+        test_recipient: $('#input-test-recipient').val(),
+        test_sender: $('#input-test-sender').val(),
+        test_message: $('#input-test-message').val()
+      },
+      dataType: 'json',
+      success: function (json) {
+        if (json.error) {
+          showAlert('#test-send-alert', 'danger', json.error);
+        } else {
+          var preview = json.preview ? '<br/><small>{{ text_preview }}: ' + $('<div>').text(json.preview).html() + '</small>' : '';
+          showAlert('#test-send-alert', 'success', json.success + preview);
+        }
+      },
+      error: function (xhr) {
+        showAlert('#test-send-alert', 'danger', xhr.statusText);
+      },
+      complete: function () {
+        $btn.button('reset');
+      }
+    });
+  });
+
+  // Bulk audience toggle.
+  $('#input-bulk-audience').on('change', function () {
+    $('#bulk-status-group').toggle(this.value === 'status');
+    $('#bulk-list-group').toggle(this.value === 'list');
+  });
+
+  // Bulk send.
+  $('#button-bulk').on('click', function () {
+    if (!confirm('{{ text_confirm_bulk }}')) {
+      return;
+    }
+
+    var $btn = $(this);
+    $btn.button('loading');
+    showAlert('#bulk-alert', 'info', '{{ text_sending }}');
+
+    $.ajax({
+      url: '{{ bulk_action }}',
+      type: 'post',
+      data: {
+        bulk_message: $('#input-bulk-message').val(),
+        bulk_audience: $('#input-bulk-audience').val(),
+        bulk_status: $('#input-bulk-status').val(),
+        bulk_list: $('#input-bulk-list').val()
+      },
+      dataType: 'json',
+      success: function (json) {
+        if (json.error) {
+          showAlert('#bulk-alert', 'danger', json.error);
+        } else {
+          showAlert('#bulk-alert', 'success', json.success);
+        }
+      },
+      error: function (xhr) {
+        showAlert('#bulk-alert', 'danger', xhr.statusText);
+      },
+      complete: function () {
+        $btn.button('reset');
+      }
+    });
+  });
+})(jQuery);
+</script>
+{{ footer }}

@@ -1,0 +1,35 @@
+{
+    "name": "hellio/module-sms",
+    "description": "Hellio Messaging for Magento 2: order-status SMS, admin new-order alerts, checkout phone OTP verification, and bulk marketing SMS through the Hellio Messaging API.",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": [
+        "OSL-3.0"
+    ],
+    "homepage": "https://helliomessaging.com",
+    "authors": [
+        {
+            "name": "Hellio Solutions",
+            "homepage": "https://helliomessaging.com",
+            "email": "support@helliomessaging.com"
+        }
+    ],
+    "require": {
+        "php": "~7.4.0||~8.0.0||~8.1.0||~8.2.0||~8.3.0",
+        "magento/framework": ">=102.0.0",
+        "magento/module-store": ">=101.0.0",
+        "magento/module-sales": ">=102.0.0",
+        "magento/module-checkout": ">=100.3.0",
+        "magento/module-customer": ">=103.0.0",
+        "magento/module-config": ">=101.1.0",
+        "magento/module-backend": ">=102.0.0"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Hellio\\Sms\\": ""
+        }
+    }
+}

@@ -1,0 +1,130 @@
+<?php
+/**
+ * Hellio Messaging for Magento 2.
+ *
+ * @var \Hellio\Sms\Block\Adminhtml\System\Config\Connect $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+$connected = $block->isConnected();
+?>
+<div class="hellio-connect" id="hellio_connect_panel">
+    <div id="hellio_connect_state"
+         class="hellio-connect__state"
+         style="margin-bottom:10px;<?= $connected ? '' : 'display:none;' ?>">
+        <strong style="color:#079d53;"><?= $escaper->escapeHtml(__('Connected')) ?></strong>
+        <span id="hellio_connect_email"><?= $connected
+            ? $escaper->escapeHtml(__('as %1', $block->getConnectedEmail())->render())
+            : '' ?></span>
+        <?= $block->getButtonHtml('hellio_disconnect_button', 'Disconnect') ?>
+    </div>
+
+    <div id="hellio_connect_form" style="<?= $connected ? 'display:none;' : '' ?>">
+        <div class="admin__field">
+            <label class="admin__field-label" for="hellio_connect_login_email">
+                <span><?= $escaper->escapeHtml(__('Hellio account email')) ?></span>
+            </label>
+            <div class="admin__field-control">
+                <input type="email" id="hellio_connect_login_email" class="admin__control-text"
+                       autocomplete="off"/>
+            </div>
+        </div>
+        <div class="admin__field">
+            <label class="admin__field-label" for="hellio_connect_password">
+                <span><?= $escaper->escapeHtml(__('Password')) ?></span>
+            </label>
+            <div class="admin__field-control">
+                <input type="password" id="hellio_connect_password" class="admin__control-text"
+                       autocomplete="new-password"/>
+            </div>
+        </div>
+        <div class="admin__field" id="hellio_2fa_field" style="display:none;">
+            <label class="admin__field-label" for="hellio_connect_2fa">
+                <span><?= $escaper->escapeHtml(__('Two-factor code')) ?></span>
+            </label>
+            <div class="admin__field-control">
+                <input type="text" id="hellio_connect_2fa" class="admin__control-text"
+                       inputmode="numeric" autocomplete="one-time-code"/>
+            </div>
+        </div>
+        <div class="admin__field-control" style="margin-top:8px;">
+            <?= $block->getButtonHtml('hellio_connect_button', 'Connect') ?>
+        </div>
+    </div>
+
+    <div id="hellio_connect_result" style="margin-top:10px;"></div>
+</div>
+<script>
+require([
+    'jquery',
+    'mage/translate'
+], function ($) {
+    'use strict';
+
+    var connectUrl = '<?= $escaper->escapeJs($escaper->escapeUrl($block->getConnectUrl())) ?>',
+        disconnectUrl = '<?= $escaper->escapeJs($escaper->escapeUrl($block->getDisconnectUrl())) ?>',
+        formKey = $('input[name="form_key"]').val() || (window.FORM_KEY || '');
+
+    function setResult(color, text) {
+        $('#hellio_connect_result').css('color', color).text(text);
+    }
+
+    $('#hellio_connect_button').on('click', function () {
+        var email = $.trim($('#hellio_connect_login_email').val()),
+            password = $('#hellio_connect_password').val(),
+            twoFactor = $.trim($('#hellio_connect_2fa').val());
+
+        if (!email || !password) {
+            setResult('#e02b27', $.mage.__('Please enter your email and password.'));
+            return;
+        }
+
+        setResult('#333', $.mage.__('Connecting...'));
+
+        $.ajax({
+            url: connectUrl,
+            type: 'POST',
+            dataType: 'json',
+            showLoader: true,
+            data: {
+                email: email,
+                password: password,
+                two_factor_code: twoFactor,
+                form_key: formKey
+            }
+        }).done(function (response) {
+            if (response && response.success) {
+                $('#hellio_connect_form').hide();
+                $('#hellio_connect_email').text($.mage.__('as %1').replace('%1', response.email || email));
+                $('#hellio_connect_state').show();
+                setResult('#079d53', response.message || $.mage.__('Connected.'));
+                $('#hellio_connect_password').val('');
+            } else if (response && response.two_factor_required) {
+                $('#hellio_2fa_field').show();
+                setResult('#e02b27', response.message || $.mage.__('Enter your two-factor code and connect again.'));
+            } else {
+                setResult('#e02b27', (response && response.message) || $.mage.__('Connection failed.'));
+            }
+        }).fail(function () {
+            setResult('#e02b27', $.mage.__('Connection failed.'));
+        });
+    });
+
+    $('#hellio_disconnect_button').on('click', function () {
+        setResult('#333', $.mage.__('Disconnecting...'));
+        $.ajax({
+            url: disconnectUrl,
+            type: 'POST',
+            dataType: 'json',
+            showLoader: true,
+            data: { form_key: formKey }
+        }).done(function (response) {
+            $('#hellio_connect_state').hide();
+            $('#hellio_2fa_field').hide();
+            $('#hellio_connect_form').show();
+            setResult('#333', (response && response.message) || $.mage.__('Disconnected.'));
+        }).fail(function () {
+            setResult('#e02b27', $.mage.__('Could not disconnect.'));
+        });
+    });
+});
+</script>

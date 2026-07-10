@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <hellio_sms>
+            <general>
+                <enabled>0</enabled>
+                <api_base_url>https://api.helliomessaging.com</api_base_url>
+                <api_token/>
+                <sender_id/>
+                <default_dial_code>233</default_dial_code>
+                <connected_email/>
+            </general>
+            <order_status>
+                <enabled>0</enabled>
+                <templates/>
+            </order_status>
+            <admin_alert>
+                <enabled>0</enabled>
+                <recipients/>
+                <template>New order {order_number} placed for {order_total} {currency} by {customer_name}.</template>
+            </admin_alert>
+            <otp>
+                <enabled>0</enabled>
+                <length>6</length>
+                <expiry>5</expiry>
+            </otp>
+        </hellio_sms>
+    </default>
+</config>

@@ -1,0 +1,60 @@
+<!--
+/**
+ * Hellio Messaging for Magento 2.
+ * Checkout OTP UI template.
+ */
+-->
+<div class="hellio-otp" data-bind="visible: isVisible()">
+    <fieldset class="fieldset hellio-otp__fieldset">
+        <legend class="legend">
+            <span data-bind="i18n: 'Verify your phone number'"></span>
+        </legend>
+
+        <div class="field required">
+            <label class="label" for="hellio-otp-phone">
+                <span data-bind="i18n: 'Phone number'"></span>
+            </label>
+            <div class="control">
+                <input type="tel"
+                       id="hellio-otp-phone"
+                       class="input-text"
+                       data-bind="value: phone, enable: !verified(), attr: {placeholder: $t('e.g. 0241111111')}"/>
+            </div>
+        </div>
+
+        <div class="actions-toolbar">
+            <button type="button"
+                    class="action secondary"
+                    data-bind="click: sendCode, enable: !busy() &amp;&amp; !verified()">
+                <span data-bind="i18n: 'Send code'"></span>
+            </button>
+        </div>
+
+        <div class="field" data-bind="visible: codeSent() &amp;&amp; !verified()">
+            <label class="label" for="hellio-otp-code">
+                <span data-bind="i18n: 'Verification code'"></span>
+            </label>
+            <div class="control">
+                <input type="text"
+                       id="hellio-otp-code"
+                       class="input-text"
+                       data-bind="value: code, attr: {maxlength: length}"/>
+            </div>
+            <div class="actions-toolbar">
+                <button type="button"
+                        class="action primary"
+                        data-bind="click: verifyCode, enable: !busy()">
+                    <span data-bind="i18n: 'Verify'"></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="message" data-bind="visible: message(), css: messageClass()">
+            <span data-bind="text: message()"></span>
+        </div>
+
+        <div class="message message-success" data-bind="visible: verified()">
+            <span data-bind="i18n: 'Phone verified. You can place your order.'"></span>
+        </div>
+    </fieldset>
+</div>

@@ -1,0 +1,38 @@
+<?php
+/**
+ * Hellio Messaging for Magento 2.
+ *
+ * @var \Hellio\Sms\Block\Adminhtml\System\Config\TestConnection $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+?>
+<?= $block->getButtonHtml() ?>
+<span id="hellio_sms_test_connection_result" style="margin-left:12px;"></span>
+<script>
+require([
+    'jquery',
+    'mage/translate'
+], function ($) {
+    'use strict';
+
+    $('#hellio_sms_test_connection_button').on('click', function () {
+        var result = $('#hellio_sms_test_connection_result');
+        result.removeClass('hellio-ok hellio-error').text($.mage.__('Testing...'));
+
+        $.ajax({
+            url: '<?= $escaper->escapeJs($escaper->escapeUrl($block->getAjaxUrl())) ?>',
+            type: 'GET',
+            showLoader: true,
+            dataType: 'json'
+        }).done(function (response) {
+            if (response && response.success) {
+                result.css('color', '#079d53').text(response.message);
+            } else {
+                result.css('color', '#e02b27').text(response && response.message ? response.message : $.mage.__('Connection failed.'));
+            }
+        }).fail(function () {
+            result.css('color', '#e02b27').text($.mage.__('Connection failed.'));
+        });
+    });
+});
+</script>

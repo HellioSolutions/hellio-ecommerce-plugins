@@ -1,0 +1,97 @@
+<?php
+/**
+ * Hellio Messaging for Magento 2.
+ *
+ * @var \Hellio\Sms\Block\Adminhtml\Bulk $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+$audienceOptions = $block->getAudienceOptions();
+$statusOptions = $block->getStatusOptions();
+?>
+<div class="hellio-bulk-form">
+    <form action="<?= $escaper->escapeUrl($block->getFormActionUrl()) ?>" method="post" id="hellio_sms_bulk_form">
+        <?= $block->getBlockHtml('formkey') ?>
+
+        <fieldset class="admin__fieldset">
+            <legend class="admin__legend"><span><?= $escaper->escapeHtml(__('Compose Bulk SMS')) ?></span></legend>
+
+            <div class="admin__field _required">
+                <label class="admin__field-label" for="hellio_message">
+                    <span><?= $escaper->escapeHtml(__('Message')) ?></span>
+                </label>
+                <div class="admin__field-control">
+                    <textarea name="message" id="hellio_message" rows="5" cols="60"
+                              maxlength="1600" class="admin__control-textarea" required="required"></textarea>
+                    <div class="admin__field-note">
+                        <?= $escaper->escapeHtml(__('Up to 1600 characters. Longer messages are split into multiple segments.')) ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin__field _required">
+                <label class="admin__field-label" for="hellio_audience">
+                    <span><?= $escaper->escapeHtml(__('Audience')) ?></span>
+                </label>
+                <div class="admin__field-control">
+                    <select name="audience" id="hellio_audience" class="admin__control-select">
+                        <?php foreach ($audienceOptions as $value => $label): ?>
+                            <option value="<?= $escaper->escapeHtmlAttr($value) ?>">
+                                <?= $escaper->escapeHtml($label) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field" id="hellio_status_field" style="display:none;">
+                <label class="admin__field-label" for="hellio_order_status">
+                    <span><?= $escaper->escapeHtml(__('Order Status')) ?></span>
+                </label>
+                <div class="admin__field-control">
+                    <select name="order_status" id="hellio_order_status" class="admin__control-select">
+                        <?php foreach ($statusOptions as $value => $label): ?>
+                            <option value="<?= $escaper->escapeHtmlAttr($value) ?>">
+                                <?= $escaper->escapeHtml($label) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin__field" id="hellio_numbers_field" style="display:none;">
+                <label class="admin__field-label" for="hellio_numbers">
+                    <span><?= $escaper->escapeHtml(__('Numbers')) ?></span>
+                </label>
+                <div class="admin__field-control">
+                    <textarea name="numbers" id="hellio_numbers" rows="5" cols="60"
+                              class="admin__control-textarea"
+                              placeholder="233241111111, 233242222222"></textarea>
+                    <div class="admin__field-note">
+                        <?= $escaper->escapeHtml(__('One number per line, or comma separated.')) ?>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="admin__field-control" style="margin-top:16px;">
+            <button type="submit" class="action-primary" title="<?= $escaper->escapeHtmlAttr(__('Send SMS')) ?>">
+                <span><?= $escaper->escapeHtml(__('Send SMS')) ?></span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+require(['jquery'], function ($) {
+    'use strict';
+
+    function toggleAudienceFields() {
+        var audience = $('#hellio_audience').val();
+        $('#hellio_status_field').toggle(audience === 'status');
+        $('#hellio_numbers_field').toggle(audience === 'list');
+    }
+
+    $('#hellio_audience').on('change', toggleAudienceFields);
+    toggleAudienceFields();
+});
+</script>

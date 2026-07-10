@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
+      layout="admin-1column">
+    <body>
+        <referenceContainer name="content">
+            <block class="Hellio\Sms\Block\Adminhtml\Bulk"
+                   name="hellio_sms.bulk.form"
+                   template="Hellio_Sms::bulk/form.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

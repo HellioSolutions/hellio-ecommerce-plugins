@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Inject the OTP UI component into the checkout layout. -->
+    <type name="Magento\Checkout\Block\Checkout\LayoutProcessor">
+        <plugin name="hellio_sms_checkout_otp_layout"
+                type="Hellio\Sms\Model\Checkout\LayoutProcessor"
+                sortOrder="100"/>
+    </type>
+    <!-- Block order placement until the phone is verified (logged-in customers). -->
+    <type name="Magento\Checkout\Api\PaymentInformationManagementInterface">
+        <plugin name="hellio_sms_enforce_otp"
+                type="Hellio\Sms\Plugin\EnforceOtpPlugin"
+                sortOrder="100"/>
+    </type>
+    <!-- Expose the OTP flag and endpoints to the checkout JS. -->
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="hellio_sms_otp" xsi:type="object">Hellio\Sms\Model\Checkout\ConfigProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- Block order placement until the phone is verified (guest checkout). -->
+    <type name="Magento\Checkout\Api\GuestPaymentInformationManagementInterface">
+        <plugin name="hellio_sms_enforce_otp_guest"
+                type="Hellio\Sms\Plugin\EnforceOtpGuestPlugin"
+                sortOrder="100"/>
+    </type>
+</config>

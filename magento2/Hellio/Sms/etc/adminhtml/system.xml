@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="hellio" translate="label" sortOrder="400">
+            <label>Hellio Messaging</label>
+        </tab>
+        <section id="hellio_sms" translate="label" type="text" sortOrder="10"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Hellio Messaging</label>
+            <tab>hellio</tab>
+            <resource>Hellio_Sms::config</resource>
+
+            <!-- General / API credentials -->
+            <group id="general" translate="label" type="text" sortOrder="10"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Hellio Messaging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Master switch. When off, no SMS or OTP calls are made.</comment>
+                </field>
+                <field id="api_base_url" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API Base URL</label>
+                    <comment>Default: https://api.helliomessaging.com</comment>
+                </field>
+                <field id="connect" translate="label comment" type="button" sortOrder="25"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Connect with your Hellio login</label>
+                    <frontend_model>Hellio\Sms\Block\Adminhtml\System\Config\Connect</frontend_model>
+                    <comment>Sign in once with your Hellio account. We exchange your login for an API token and store it encrypted. Your password is never saved.</comment>
+                </field>
+                <field id="api_token" translate="label comment" type="obscure" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API Token</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <comment>Filled automatically when you connect above. You can also paste a token from your Hellio dashboard. Stored encrypted, never exposed to the browser.</comment>
+                </field>
+                <field id="sender_id" translate="label comment" type="text" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Sender ID</label>
+                    <comment>Approved Sender ID, maximum 11 characters.</comment>
+                </field>
+                <field id="default_dial_code" translate="label comment" type="text" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Default Dial Code</label>
+                    <comment>Country code applied to local numbers, for example 233. A leading 0 is stripped and this code is prepended.</comment>
+                </field>
+                <field id="test_connection" translate="label" type="button" sortOrder="60"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Test Connection</label>
+                    <frontend_model>Hellio\Sms\Block\Adminhtml\System\Config\TestConnection</frontend_model>
+                    <comment>Calls GET /v1/balance with the saved token and shows your wallet balance.</comment>
+                </field>
+                <field id="test_send" translate="label" type="button" sortOrder="70"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Send SMS</label>
+                    <frontend_model>Hellio\Sms\Block\Adminhtml\System\Config\TestSend</frontend_model>
+                    <comment>Send an SMS to one number or many. Confirm delivery, preview a template, or run a quick send-to-list. Placeholders render against your most recent order.</comment>
+                </field>
+            </group>
+
+            <!-- Customer order-status SMS -->
+            <group id="order_status" translate="label" type="text" sortOrder="20"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Customer Order-Status SMS</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Order-Status SMS</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="templates" translate="label comment" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Status Templates</label>
+                    <frontend_model>Hellio\Sms\Block\Adminhtml\System\Config\StatusTemplates</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment><![CDATA[Add a row per order status. Only the statuses listed here trigger a customer SMS. Placeholders: {order_id} {order_number} {order_status} {order_total} {currency} {customer_name} {customer_first_name} {store_name} {shop_url} {tracking_url} {date}]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <!-- Admin new-order alert -->
+            <group id="admin_alert" translate="label" type="text" sortOrder="30"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Admin New-Order Alert</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Admin Alert</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="recipients" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Admin Numbers</label>
+                    <comment>Comma separated list of admin phone numbers to alert on each new order.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="template" translate="label comment" type="textarea" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Alert Template</label>
+                    <comment><![CDATA[Placeholders: {order_id} {order_number} {order_status} {order_total} {currency} {customer_name} {customer_first_name} {store_name} {shop_url} {tracking_url} {date}]]></comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <!-- Checkout OTP -->
+            <group id="otp" translate="label" type="text" sortOrder="40"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Checkout Phone OTP</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Checkout OTP</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Require phone verification before the order is placed.</comment>
+                </field>
+                <field id="length" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Code Length</label>
+                    <comment>Number of digits, 4 to 10.</comment>
+                    <validate>validate-digits validate-digits-range digits-range-4-10</validate>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="expiry" translate="label comment" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Expiry (minutes)</label>
+                    <comment>How long a code stays valid, 1 to 1440 minutes.</comment>
+                    <validate>validate-digits validate-digits-range digits-range-1-1440</validate>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

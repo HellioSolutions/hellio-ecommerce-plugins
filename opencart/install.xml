@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Hellio Messaging - checkout OTP injection (OCMOD).
+
+  This modification wires the checkout OTP feature into OpenCart's default
+  AJAX checkout confirm step. It does two things:
+
+    1. Server side (confirm.php): before the confirm view renders, if OTP is
+       enabled and the session is not yet verified, the payment button is
+       replaced with a notice. This is the real enforcement; the order cannot
+       be placed until the session carries a verified flag.
+
+    2. Template (confirm.twig): a small "Send code" / "Enter code" block plus a
+       JS snippet that calls the server side endpoints
+       (extension/module/hellio_otp/send and /verify). The API token never
+       reaches the browser.
+
+  Keep this file minimal. All heavy lifting lives in the PHP controllers.
+-->
+<modification>
+  <name>Hellio Messaging Checkout OTP</name>
+  <code>hellio_sms_otp</code>
+  <version>1.0.0</version>
+  <author>Hellio Solutions</author>
+  <link>https://helliomessaging.com</link>
+
+  <!-- 1. Server side guard: block the confirm output until verified. -->
+  <file path="catalog/controller/checkout/confirm.php">
+    <operation>
+      <search><![CDATA[$this->response->setOutput($this->load->view('checkout/confirm', $data));]]></search>
+      <add position="before"><![CDATA[
+		// Hellio Messaging: enforce checkout OTP verification.
+		$data['hellio_otp_show'] = false;
+		$data['hellio_otp_telephone'] = '';
+
+		if ($this->config->get('module_hellio_sms_status') && $this->config->get('module_hellio_sms_otp_enabled')) {
+			if (isset($this->session->data['guest']['telephone'])) {
+				$data['hellio_otp_telephone'] = $this->session->data['guest']['telephone'];
+			} elseif ($this->customer->isLogged()) {
+				$data['hellio_otp_telephone'] = $this->customer->getTelephone();
+			}
+
+			if (empty($this->session->data['hellio_otp_verified'])) {
+				$data['hellio_otp_show'] = true;
+				$data['payment'] = '<div class="alert alert-warning">Please verify your phone number to place your order.</div>';
+			}
+		}
+]]></add>
+    </operation>
+  </file>
+
+  <!-- 2. Template: inject the OTP UI + JS before the payment button. -->
+  <file path="catalog/view/theme/*/template/checkout/confirm.twig">
+    <operation>
+      <search><![CDATA[{{ payment }}]]></search>
+      <add position="before"><![CDATA[
+{% if hellio_otp_show %}
+<div id="hellio-otp" class="hellio-otp" style="margin-bottom:15px;">
+  <div class="panel panel-default">
+    <div class="panel-heading"><h4 class="panel-title" style="margin:0;">Verify your phone</h4></div>
+    <div class="panel-body">
+      <p>We text a one time code to confirm your number before your order is placed.</p>
+      <div id="hellio-otp-alert"></div>
+      <div class="form-group">
+        <label for="hellio-otp-phone">Phone number</label>
+        <div class="input-group">
+          <input type="tel" id="hellio-otp-phone" class="form-control" value="{{ hellio_otp_telephone }}" placeholder="Phone number"/>
+          <span class="input-group-btn">
+            <button type="button" id="hellio-otp-send" class="btn btn-default">Send code</button>
+          </span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="hellio-otp-code">Verification code</label>
+        <div class="input-group">
+          <input type="text" id="hellio-otp-code" class="form-control" inputmode="numeric" autocomplete="one-time-code" placeholder="Enter code"/>
+          <span class="input-group-btn">
+            <button type="button" id="hellio-otp-verify" class="btn btn-primary">Verify</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+(function ($) {
+  function otpAlert(type, message) {
+    $('#hellio-otp-alert').html('<div class="alert alert-' + type + '">' + message + '</div>');
+  }
+
+  // Request a code. The token stays on the server; we only pass the phone.
+  $('#hellio-otp-send').on('click', function () {
+    var $btn = $(this).prop('disabled', true);
+
+    $.ajax({
+      url: 'index.php?route=extension/module/hellio_otp/send',
+      type: 'post',
+      data: { telephone: $('#hellio-otp-phone').val() },
+      dataType: 'json',
+      success: function (json) {
+        otpAlert(json.error ? 'danger' : 'success', json.error || json.success);
+      },
+      error: function (xhr) {
+        otpAlert('danger', xhr.statusText);
+      },
+      complete: function () {
+        $btn.prop('disabled', false);
+      }
+    });
+  });
+
+  // Verify the code. On success the session is flagged and we reload the
+  // confirm step so the payment button appears.
+  $('#hellio-otp-verify').on('click', function () {
+    var $btn = $(this).prop('disabled', true);
+
+    $.ajax({
+      url: 'index.php?route=extension/module/hellio_otp/verify',
+      type: 'post',
+      data: { code: $('#hellio-otp-code').val(), telephone: $('#hellio-otp-phone').val() },
+      dataType: 'json',
+      success: function (json) {
+        if (json.error) {
+          otpAlert('danger', json.error);
+          $btn.prop('disabled', false);
+          return;
+        }
+
+        otpAlert('success', json.success);
+
+        $.ajax({
+          url: 'index.php?route=checkout/confirm',
+          dataType: 'html',
+          success: function (html) {
+            $('#hellio-otp').parent().html(html);
+          },
+          error: function () {
+            $btn.prop('disabled', false);
+          }
+        });
+      },
+      error: function (xhr) {
+        otpAlert('danger', xhr.statusText);
+        $btn.prop('disabled', false);
+      }
+    });
+  });
+})(jQuery);
+</script>
+{% endif %}
+]]></add>
+    </operation>
+  </file>
+</modification>

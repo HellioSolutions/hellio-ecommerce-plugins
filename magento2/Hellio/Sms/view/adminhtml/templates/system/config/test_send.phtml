@@ -1,0 +1,98 @@
+<?php
+/**
+ * Hellio Messaging for Magento 2.
+ *
+ * @var \Hellio\Sms\Block\Adminhtml\System\Config\TestSend $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+?>
+<div class="hellio-test-send">
+    <p class="admin__field-note" style="margin-bottom:12px;">
+        <?= $escaper->escapeHtml(__('Send an SMS to one number or many. Handy for a quick test or a small send-to-list.')) ?>
+    </p>
+    <div class="admin__field">
+        <label class="admin__field-label" for="hellio_test_recipient">
+            <span><?= $escaper->escapeHtml(__('Recipients')) ?></span>
+        </label>
+        <div class="admin__field-control">
+            <textarea id="hellio_test_recipient" rows="3" cols="50" class="admin__control-textarea"
+                      placeholder="0241111111, 0242222222"></textarea>
+            <div class="admin__field-note">
+                <?= $escaper->escapeHtml(__('One number, or many separated by comma, space, or a new line.')) ?>
+            </div>
+        </div>
+    </div>
+    <div class="admin__field">
+        <label class="admin__field-label" for="hellio_test_sender">
+            <span><?= $escaper->escapeHtml(__('Sender ID')) ?></span>
+        </label>
+        <div class="admin__field-control">
+            <input type="text" id="hellio_test_sender" class="admin__control-text" maxlength="11"
+                   value="<?= $escaper->escapeHtmlAttr($block->getDefaultSender()) ?>"/>
+        </div>
+    </div>
+    <div class="admin__field">
+        <label class="admin__field-label" for="hellio_test_message">
+            <span><?= $escaper->escapeHtml(__('Message')) ?></span>
+        </label>
+        <div class="admin__field-control">
+            <textarea id="hellio_test_message" rows="4" cols="50" maxlength="1600"
+                      class="admin__control-textarea"><?= $escaper->escapeHtml(
+                          __('Hi {customer_first_name}, your order {order_number} is now {order_status}.')
+                      ) ?></textarea>
+            <div class="admin__field-note">
+                <?= $escaper->escapeHtml(__('Placeholders render against your most recent order, or blank if there is none.')) ?>
+            </div>
+        </div>
+    </div>
+    <div class="admin__field-control" style="margin-top:8px;">
+        <?= $block->getButtonHtml() ?>
+        <span id="hellio_test_send_result" style="margin-left:12px;"></span>
+    </div>
+</div>
+<script>
+require([
+    'jquery',
+    'mage/translate'
+], function ($) {
+    'use strict';
+
+    var ajaxUrl = '<?= $escaper->escapeJs($escaper->escapeUrl($block->getAjaxUrl())) ?>',
+        formKey = $('input[name="form_key"]').val() || (window.FORM_KEY || '');
+
+    $('#hellio_sms_test_send_button').on('click', function () {
+        var recipient = $.trim($('#hellio_test_recipient').val()),
+            sender = $.trim($('#hellio_test_sender').val()),
+            message = $('#hellio_test_message').val(),
+            result = $('#hellio_test_send_result');
+
+        if (!recipient || !message) {
+            result.css('color', '#e02b27').text($.mage.__('Enter at least one recipient and a message.'));
+            return;
+        }
+
+        result.css('color', '#333').text($.mage.__('Sending...'));
+
+        $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            dataType: 'json',
+            showLoader: true,
+            data: {
+                recipient: recipient,
+                sender: sender,
+                message: message,
+                form_key: formKey
+            }
+        }).done(function (response) {
+            if (response && response.success) {
+                result.css('color', '#079d53').text(response.message);
+            } else {
+                result.css('color', '#e02b27').text((response && response.message) || $.mage.__('Send failed.'));
+            }
+        }).fail(function () {
+            result.css('color', '#e02b27').text($.mage.__('Send failed.'));
+        });
+    });
+});
+</script>

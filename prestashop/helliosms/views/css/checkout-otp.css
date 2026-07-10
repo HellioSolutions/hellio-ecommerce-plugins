@@ -1,0 +1,49 @@
+/**
+ * Hellio Messaging checkout OTP styles.
+ * @author Hellio Solutions
+ */
+.helliosms-otp {
+	margin: 1rem 0;
+	padding: 1rem 1.25rem;
+	border: 1px solid #d6dbe0;
+	border-radius: 6px;
+	background: #fbfcfd;
+}
+
+.helliosms-otp__title {
+	margin: 0 0 0.75rem;
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.helliosms-otp .form-group {
+	margin-bottom: 0.75rem;
+}
+
+.helliosms-otp input.form-control {
+	max-width: 320px;
+}
+
+.helliosms-otp__message {
+	margin: 0.75rem 0 0;
+	font-size: 0.9rem;
+}
+
+.helliosms-otp__message--error {
+	color: #b02a2a;
+}
+
+.helliosms-otp__message--ok {
+	color: #2a7a3b;
+}
+
+.helliosms-otp__ok {
+	margin: 0;
+	font-weight: 600;
+	color: #2a7a3b;
+}
+
+.helliosms-otp--verified {
+	border-color: #b7dcc0;
+	background: #f2faf4;
+}

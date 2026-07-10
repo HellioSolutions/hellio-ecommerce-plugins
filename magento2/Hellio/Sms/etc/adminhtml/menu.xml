@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Hellio_Sms::hellio"
+             title="Hellio Messaging"
+             translate="title"
+             module="Hellio_Sms"
+             sortOrder="80"
+             resource="Hellio_Sms::hellio"/>
+        <add id="Hellio_Sms::bulk"
+             title="Bulk SMS"
+             translate="title"
+             module="Hellio_Sms"
+             sortOrder="10"
+             parent="Hellio_Sms::hellio"
+             action="hellio_sms/bulk/index"
+             resource="Hellio_Sms::bulk"/>
+        <add id="Hellio_Sms::config_link"
+             title="Configuration"
+             translate="title"
+             module="Hellio_Sms"
+             sortOrder="20"
+             parent="Hellio_Sms::hellio"
+             action="adminhtml/system_config/edit/section/hellio_sms"
+             resource="Hellio_Sms::config"/>
+    </menu>
+</config>
